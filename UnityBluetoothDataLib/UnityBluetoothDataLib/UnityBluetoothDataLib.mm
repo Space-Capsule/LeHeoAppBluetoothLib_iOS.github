@@ -58,7 +58,6 @@ extern "C"
             NSString *service = [NSString stringWithFormat:@"%s", aService];
             NSString *characteristic = [NSString stringWithFormat:@"%s", aCharacteristic];
             
-            // [_unityBluetoothDataLib setCharacteristicNotification:identifier service:service characteristic:characteristic];
             [_unityBluetoothDataLib setCharacteristicNotificationCustom:identifier service:service characteristic:characteristic];
         }
     }
@@ -69,7 +68,6 @@ extern "C"
         {
             NSString *identifier = [NSString stringWithFormat:@"%s", aPeripheralIdentifier];
         
-            // [_unityBluetoothDataLib setCharacteristicNotification:identifier service:service characteristic:characteristic];
             [_unityBluetoothDataLib setCharacteristicNotification:identifier];
         }
     }
@@ -120,9 +118,7 @@ extern "C"
         if (_peripheralsList != nil)
         {
             [_peripheralsList removeAllObjects];
-        }
-        
-//        NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber  numberWithBool:YES], CBCentralManagerScanOptionAllowDuplicatesKey, nil];
+        }        
         
         [_centralManager scanForPeripheralsWithServices:nil options:nil];
         
@@ -191,8 +187,6 @@ extern "C"
         if (peripheral != nil)
         {
             CBCharacteristic *chacter = nil;
-            // CBUUID *serviceUUID = [CBUUID UUIDWithString:@"FFE0"];
-            // CBUUID *characteristicUUID = [CBUUID UUIDWithString:@"FFE1"];
             CBUUID *serviceUUID = [CBUUID UUIDWithString:[GlobalConfig SubscribedService]];
             CBUUID *characteristicUUID = [CBUUID UUIDWithString:[GlobalConfig SubscribedCharacteristic]];
             
@@ -381,7 +375,6 @@ extern "C"
                 if ([deviceName rangeOfString:@"HC-"].location != NSNotFound || [deviceName rangeOfString:@"SC-BLE5"].location != NSNotFound || [deviceName rangeOfString:@"SC-S0000"].location != NSNotFound)
                 {
                     NSString *deviceIdentifier = [[peripheral identifier] UUIDString];
-                    // NSURL *dictUrl = [_peripheralsDictionary objectForKey:deviceIdentifier];
                     
                     while ([_peripheralsDictionary objectForKey:deviceIdentifier] == nil)
                     {
@@ -406,17 +399,6 @@ extern "C"
                         NSString *noDevice = @"0#null#null";
                         UnitySendMessage ("OC_Plugins", "detectedDevices", [noDevice UTF8String]);
                     }
-                    
-                    // 原來的方法
-//                    if (dictUrl == nil)
-//                    {
-//                        [_peripheralsDictionary setObject:peripheral forKey:deviceIdentifier];
-//                        [_peripheralsList addObject:peripheral];
-//                        // NSLog(@"EthanLinBluetoothDataLib, name: %@, identifier: %@", peripheral.name, peripheral.identifier);
-//
-//                        NSString *deviceInfo = [NSString stringWithFormat:@"%@#%@", peripheral.name, peripheral.identifier];
-//                        UnitySendMessage ("OC_Plugins", "detectedDevices", [deviceInfo UTF8String]);
-//                    }
                 }
             }
         }
