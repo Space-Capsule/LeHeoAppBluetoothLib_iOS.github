@@ -14,7 +14,8 @@
 
 @interface UnityBluetoothDataLib : NSObject<CBCentralManagerDelegate, CBPeripheralManagerDelegate, CBPeripheralDelegate>
 {
-    NSString *_debugTag;
+    // NSString *_debugTag;
+    NSDateFormatter *_dateFormatter;
     
     CBCentralManager *_centralManager;
     

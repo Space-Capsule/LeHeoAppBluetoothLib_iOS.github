@@ -12,13 +12,18 @@ extern "C"
 {
     UnityBluetoothDataLib *_unityBluetoothDataLib = nil;
 
-    void _iosInitUnityBluetoothManager()
+    void iosSetUnityGameObjectName(char *aUnityGameObjectName)
+    {
+        [GlobalConfig setUnityGameObjectName:[NSString stringWithCString:aUnityGameObjectName encoding:NSUTF8StringEncoding]];
+    }
+
+    void iosInitUnityBluetoothManager()
     {
         _unityBluetoothDataLib = [UnityBluetoothDataLib new];
         [_unityBluetoothDataLib initBluetoothManager];
     }
 
-    void _iosUnityBluetoothStartScan()
+    void iosUnityBluetoothStartScan()
     {
         if (_unityBluetoothDataLib != nil)
         {
@@ -26,7 +31,7 @@ extern "C"
         }
     }
 
-    void _iosUnityBluetoothStopScan()
+    void iosUnityBluetoothStopScan()
     {
         if (_unityBluetoothDataLib != nil)
         {
@@ -34,7 +39,7 @@ extern "C"
         }
     }
 
-    void _iosUnityBluetoothConnectPeripheral(char *aPeripheralIdentifier)
+    void iosUnityBluetoothConnectPeripheral(char *aPeripheralIdentifier)
     {
         if (_unityBluetoothDataLib != nil)
         {
@@ -42,7 +47,7 @@ extern "C"
         }
     }
 
-    void _iosUnityBluetoothDisconnectAll()
+    void iosUnityBluetoothDisconnectAll()
     {
         if (_unityBluetoothDataLib != nil)
         {
@@ -50,7 +55,7 @@ extern "C"
         }
     }
 
-    void _iosSetCharacteristicNotificationCustom(char *aPeripheralIdentifier, char *aService, char *aCharacteristic)
+    void iosSetCharacteristicNotificationCustom(char *aPeripheralIdentifier, char *aService, char *aCharacteristic)
     {
         if (_unityBluetoothDataLib != nil && aPeripheralIdentifier != nil && aService != nil && aCharacteristic != nil)
         {
@@ -58,16 +63,18 @@ extern "C"
             NSString *service = [NSString stringWithFormat:@"%s", aService];
             NSString *characteristic = [NSString stringWithFormat:@"%s", aCharacteristic];
             
+            // [_unityBluetoothDataLib setCharacteristicNotification:identifier service:service characteristic:characteristic];
             [_unityBluetoothDataLib setCharacteristicNotificationCustom:identifier service:service characteristic:characteristic];
         }
     }
 
-    void _iosSetCharacteristicNotification(char *aPeripheralIdentifier)
+    void iosSetCharacteristicNotification(char *aPeripheralIdentifier)
     {
         if (_unityBluetoothDataLib != nil && aPeripheralIdentifier != nil)
         {
             NSString *identifier = [NSString stringWithFormat:@"%s", aPeripheralIdentifier];
         
+            // [_unityBluetoothDataLib setCharacteristicNotification:identifier service:service characteristic:characteristic];
             [_unityBluetoothDataLib setCharacteristicNotification:identifier];
         }
     }
@@ -89,40 +96,48 @@ extern "C"
 
 - (void)initBluetoothManager
 {
+    _dateFormatter = [[NSDateFormatter alloc] init];
+    [_dateFormatter setDateFormat:@"yyyy-MM-dd hh:mm:ss.SSS"];
+    
     _centralManager = nil;
     
     _isInitializing = TRUE;
     
     _centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil];
-    
-    
-    _peripheralsDictionary = nil;
-    _peripheralsDictionary = [[NSMutableDictionary alloc] init];
-    
-    _peripheralsList = nil;
-    _peripheralsList = [[NSMutableArray alloc] init];
-    
+   
     NSLog(@"%@, init成功.", [GlobalConfig DebugTag]);
-    UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", "init成功.");
+    UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", "init Bluetooth Manager.");
 }
 
 - (void)scanBluetoothPeripheral
 {
     if (_centralManager != nil)
     {
-        if (_peripheralsDictionary != nil)
+
+        if (_peripheralsDictionary == nil)
+        {
+            _peripheralsDictionary = [[NSMutableDictionary alloc] init];
+        }
+        else
         {
             [_peripheralsDictionary removeAllObjects];
         }
         
-        if (_peripheralsList != nil)
+        if (_peripheralsList == nil)
+        {
+            _peripheralsList = [[NSMutableArray alloc] init];
+        }
+        else
         {
             [_peripheralsList removeAllObjects];
-        }        
+        }
+        
+//        NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber  numberWithBool:YES], CBCentralManagerScanOptionAllowDuplicatesKey, nil];
         
         [_centralManager scanForPeripheralsWithServices:nil options:nil];
         
-        NSLog(@"%@, 開始掃瞄!", [GlobalConfig DebugTag]);
+        NSString *nowDateString = [_dateFormatter stringFromDate:[NSDate date]];
+        NSLog(@"%@ %@, 開始掃瞄!", nowDateString, [GlobalConfig DebugTag]);
     }
     else
     {
@@ -135,8 +150,16 @@ extern "C"
     if (_centralManager != nil)
     {
         [_centralManager stopScan];
+
+        UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", "stopScan");
         
-        NSLog(@"%@, 停止掃瞄!", [GlobalConfig DebugTag]);
+        if ([_peripheralsList count] < 1)
+        {
+            UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "whenStopScan", "0");
+        }
+        
+        NSString *nowDateString = [_dateFormatter stringFromDate:[NSDate date]];
+        NSLog(@"%@ %@, 停止掃瞄!", nowDateString, [GlobalConfig DebugTag]);
     }
     else
     {
@@ -153,7 +176,8 @@ extern "C"
         if (peripheral != nil)
         {
             [_centralManager connectPeripheral:peripheral options:nil];
-            NSLog(@"%@, connect to %@", [GlobalConfig DebugTag], aIdentifier);
+            NSString *nowDateString = [_dateFormatter stringFromDate:[NSDate date]];
+            NSLog(@"%@ %@, connect to %@", nowDateString, [GlobalConfig DebugTag], aIdentifier);
         }
         else
         {
@@ -175,7 +199,8 @@ extern "C"
                 [_centralManager cancelPeripheralConnection:peripheral];
             }
         }
-        NSLog(@"%@, 斷開所有連線", [GlobalConfig DebugTag]);
+        NSString *nowDateString = [_dateFormatter stringFromDate:[NSDate date]];
+        NSLog(@"%@ %@, 斷開所有連線", nowDateString, [GlobalConfig DebugTag]);
     }
 }
 
@@ -187,6 +212,8 @@ extern "C"
         if (peripheral != nil)
         {
             CBCharacteristic *chacter = nil;
+            // CBUUID *serviceUUID = [CBUUID UUIDWithString:@"FFE0"];
+            // CBUUID *characteristicUUID = [CBUUID UUIDWithString:@"FFE1"];
             CBUUID *serviceUUID = [CBUUID UUIDWithString:[GlobalConfig SubscribedService]];
             CBUUID *characteristicUUID = [CBUUID UUIDWithString:[GlobalConfig SubscribedCharacteristic]];
             
@@ -320,33 +347,33 @@ extern "C"
     {
         case CBManagerStateUnsupported:
             NSLog(@"%@, Central State: 不支援哦!", [GlobalConfig DebugTag]);
-            UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", "不支援哦!");
+            UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", "不支援哦!");
             break;
             
         case CBManagerStateUnauthorized:
             NSLog(@"%@, Central State: 沒有取得授權哦!", [GlobalConfig DebugTag]);
-            UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", "沒有取得授權哦!");
+            UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", "沒有取得授權哦!");
             break;
             
         case CBManagerStatePoweredOff:
             NSLog(@"%@, Central State: 沒開電源啦!", [GlobalConfig DebugTag]);
-            UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", "沒開電源啦!");
+            UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", "沒開電源啦!");
             break;
             
         case CBManagerStatePoweredOn:
             NSLog(@"%@, Central State: Powered On!", [GlobalConfig DebugTag]);
             if (_isInitializing)
             {
-                UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", "Initialized");
+                UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", "Initialized");
             }
             _isInitializing = FALSE;
-            UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", "Powered On!, and scanning peripheral");
+            UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", "Powered On!");
             // [self scanBluetoothPeripheral];
             break;
             
         case CBManagerStateUnknown:
             NSLog(@"%@, Central State: Unknown!", [GlobalConfig DebugTag]);
-            UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", "Unknown!");
+            UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", "Unknown!");
             break;
             
         default:
@@ -359,7 +386,7 @@ extern "C"
     if (_isInitializing && peripheral.state == CBManagerStatePoweredOn)
     {
         _isInitializing = FALSE;
-        UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", "Initialized");
+        UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", "Initialized");
     }
 }
 
@@ -372,9 +399,11 @@ extern "C"
             if (_peripheralsDictionary != nil)
             {
                 NSString *deviceName = [peripheral name];
-                if ([deviceName rangeOfString:@"HC-"].location != NSNotFound || [deviceName rangeOfString:@"SC-BLE5"].location != NSNotFound || [deviceName rangeOfString:@"SC-S0000"].location != NSNotFound)
+                // if ([deviceName rangeOfString:@"HC-"].location != NSNotFound || [deviceName rangeOfString:@"SC-BLE5"].location != NSNotFound || [deviceName rangeOfString:@"SC-S0000"].location != NSNotFound || [deviceName rangeOfString:@"SC-LTC"].location != NSNotFound)
+                if ([deviceName rangeOfString:GlobalConfig.SC_BLE_NAME_HC].location != NSNotFound || [deviceName rangeOfString:GlobalConfig.SC_BLE_NAME].location != NSNotFound || [deviceName rangeOfString:GlobalConfig.SC_BLE_NAME2].location != NSNotFound || [deviceName rangeOfString:GlobalConfig.SC_BLE_NAME_LTC].location != NSNotFound)
                 {
                     NSString *deviceIdentifier = [[peripheral identifier] UUIDString];
+                    // NSURL *dictUrl = [_peripheralsDictionary objectForKey:deviceIdentifier];
                     
                     while ([_peripheralsDictionary objectForKey:deviceIdentifier] == nil)
                     {
@@ -390,15 +419,26 @@ extern "C"
                             CBPeripheral *device = [_peripheralsList objectAtIndex:i];
                             NSString *deviceInfo = [NSString stringWithFormat:@"%lu#%@#%@", [_peripheralsList count], device.name, device.identifier];
                             
-                            NSLog(@"%@, name: %@, identifier: %@", [GlobalConfig DebugTag], device.name, device.identifier);
-                            UnitySendMessage ("OC_Plugins", "detectedDevices", [deviceInfo UTF8String]);
+                            // NSLog(@"%@, name: %@, identifier: %@", [GlobalConfig DebugTag], device.name, device.identifier);
+                            UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "detectedDevices", [deviceInfo UTF8String]);
                         }
                     }
                     else
                     {
                         NSString *noDevice = @"0#null#null";
-                        UnitySendMessage ("OC_Plugins", "detectedDevices", [noDevice UTF8String]);
+                        UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "detectedDevices", [noDevice UTF8String]);
                     }
+                    
+                    // 原來的方法
+//                    if (dictUrl == nil)
+//                    {
+//                        [_peripheralsDictionary setObject:peripheral forKey:deviceIdentifier];
+//                        [_peripheralsList addObject:peripheral];
+//                        // NSLog(@"EthanLinBluetoothDataLib, name: %@, identifier: %@", peripheral.name, peripheral.identifier);
+//
+//                        NSString *deviceInfo = [NSString stringWithFormat:@"%@#%@", peripheral.name, peripheral.identifier];
+//                        UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "detectedDevices", [deviceInfo UTF8String]);
+//                    }
                 }
             }
         }
@@ -412,8 +452,9 @@ extern "C"
     if (peripheralId != nil)
     {
         NSString *message = @"devicesConnected";
-        UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", [message UTF8String]);
-        NSLog(@"%@, 已連接至 %@", [GlobalConfig DebugTag], peripheralId);
+        NSString *nowDateString = [_dateFormatter stringFromDate:[NSDate date]];
+        UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", [message UTF8String]);
+        NSLog(@"%@ %@, 已連接至 %@", nowDateString, [GlobalConfig DebugTag], peripheralId);
         peripheral.delegate = self;
         [peripheral discoverServices:nil];
     }
@@ -424,8 +465,9 @@ extern "C"
     if (_peripheralsDictionary != nil)
     {
         NSString *message = @"devicesDisconnected";
-        UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", [message UTF8String]);
-        NSLog(@"%@, 已斷開連接", [GlobalConfig DebugTag]);
+        NSString *nowDateString = [_dateFormatter stringFromDate:[NSDate date]];
+        UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", [message UTF8String]);
+        NSLog(@"%@ %@, 已斷開連接", nowDateString, [GlobalConfig DebugTag]);
     }
 }
 
@@ -434,7 +476,7 @@ extern "C"
     if (error)
     {
         NSLog(@"%@, didDiscoverServices error %@", [GlobalConfig DebugTag], error.description);
-        // UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", [message UTF8String] );
+        // UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", [message UTF8String] );
     }
     else
     {
@@ -443,7 +485,7 @@ extern "C"
         {
             for (CBService *service in peripheral.services)
             {
-                NSLog(@"%@, 發現的service %@", [GlobalConfig DebugTag], service);
+                // NSLog(@"%@, 發現的service %@", [GlobalConfig DebugTag], service);
                 
                 [peripheral discoverCharacteristics:nil forService:service];
             }
@@ -456,7 +498,7 @@ extern "C"
     if (error)
     {
         NSLog(@"%@, didDiscoverCharacteristicsForService error %@", [GlobalConfig DebugTag], error.description);
-        // UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", [message UTF8String] );
+        // UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", [message UTF8String] );
     }
     else
     {
@@ -465,7 +507,7 @@ extern "C"
         {
             for (CBCharacteristic *characteristic in service.characteristics)
             {
-                NSLog(@"%@, 發現的characteristic %@", [GlobalConfig DebugTag], characteristic);
+                // NSLog(@"%@, 發現的characteristic %@", [GlobalConfig DebugTag], characteristic);
             }
             
             [self setCharacteristicNotification:peripheralId];
@@ -478,7 +520,7 @@ extern "C"
     if (error)
     {
         NSLog(@"%@, didUpdateValueForCharacteristic error %@", [GlobalConfig DebugTag], error.description);
-        // UnitySendMessage ("OC_Plugins", "receiveMessageFromNative", [message UTF8String] );
+        // UnitySendMessage ([[GlobalConfig UnityGameObject] UTF8String], "receiveMessageFromNative", [message UTF8String] );
     }
     else
     {
@@ -494,7 +536,9 @@ extern "C"
                 // _upperId = [NSString stringWithFormat:@"%2@", characteristic.value];
                 // NSLog(@"EthanLinBluetoothDataLib, 收到資料_upperId為 %@", _upperId);
                 _data = characteristic.value;
-                [_unityBluetoothDataLib bleDataHandler:_data];
+                // [_unityBluetoothDataLib bleDataHandler:_data];
+                NSString *finalDataString = [Utils byteArrayToBase64:_data length:_data.length];
+                UnitySendMessage([[GlobalConfig UnityGameObject] UTF8String], "receiveDataFromNative", [finalDataString UTF8String]);
             }
         }
     }
@@ -503,67 +547,70 @@ extern "C"
 
 - (void)bleDataHandler:(NSData *)aData
 {
-    NSData *chunkUpperId = [aData subdataWithRange:NSMakeRange(0, 1)];
-    
-    NSMutableData *upperTemp1 = [[aData subdataWithRange:NSMakeRange(1, 4)] mutableCopy];
-    NSMutableData *upperTemp5 = [[aData subdataWithRange:NSMakeRange(5, 4)] mutableCopy];
-    NSMutableData *upperTemp9 = [[aData subdataWithRange:NSMakeRange(9, 4)] mutableCopy];
-    NSMutableData *upperTemp13 = [[aData subdataWithRange:NSMakeRange(13, 4)] mutableCopy];
-    uint32_t *bytes1 = (uint32_t *)upperTemp1.mutableBytes;
-    uint32_t *bytes5 = (uint32_t *)upperTemp5.mutableBytes;
-    uint32_t *bytes9 = (uint32_t *)upperTemp9.mutableBytes;
-    uint32_t *bytes13 = (uint32_t *)upperTemp13.mutableBytes;
-    *bytes1 = CFSwapInt32(*bytes1);
-    *bytes5 = CFSwapInt32(*bytes5);
-    *bytes9 = CFSwapInt32(*bytes9);
-    *bytes13 = CFSwapInt32(*bytes13);
-    
-    
-    NSData *chunkDownId = [aData subdataWithRange:NSMakeRange(18, 1)];
-    
-    NSMutableData *downTemp19 = [[aData subdataWithRange:NSMakeRange(19, 4)] mutableCopy];
-    NSMutableData *downTemp23 = [[aData subdataWithRange:NSMakeRange(23, 4)] mutableCopy];
-    NSMutableData *downTemp27 = [[aData subdataWithRange:NSMakeRange(27, 4)] mutableCopy];
-    NSMutableData *downTemp31 = [[aData subdataWithRange:NSMakeRange(31, 4)] mutableCopy];
-    uint32_t *bytes19 = (uint32_t *)downTemp19.mutableBytes;
-    uint32_t *bytes23 = (uint32_t *)downTemp23.mutableBytes;
-    uint32_t *bytes27 = (uint32_t *)downTemp27.mutableBytes;
-    uint32_t *bytes31 = (uint32_t *)downTemp31.mutableBytes;
-    *bytes19 = CFSwapInt32(*bytes19);
-    *bytes23 = CFSwapInt32(*bytes23);
-    *bytes27 = CFSwapInt32(*bytes27);
-    *bytes31 = CFSwapInt32(*bytes31);
-    
-    // NSString *dataString = [_unityBluetoothDataLib byteArrayToHexString:_data];
-    
-    _upperId = [Utils getBodyId:chunkUpperId];
-    NSString *dataStringTemp1 = [Utils byteArrayToHexString:upperTemp1];
-    NSString *dataStringTemp5 = [Utils byteArrayToHexString:upperTemp5];
-    NSString *dataStringTemp9 = [Utils byteArrayToHexString:upperTemp9];
-    NSString *dataStringTemp13 = [Utils byteArrayToHexString:upperTemp13];
-    float upperFloatX = [Utils hexString2float:dataStringTemp5];
-    float upperFloatY = [Utils hexString2float:dataStringTemp1] * -1;
-    float upperFloatZ = [Utils hexString2float:dataStringTemp9] * -1;
-    float upperFloatW = [Utils hexString2float:dataStringTemp13];
-    
-    _downId = [Utils getBodyId:chunkDownId];
-    NSString *dataStringTemp19 = [Utils byteArrayToHexString:downTemp19];
-    NSString *dataStringTemp23 = [Utils byteArrayToHexString:downTemp23];
-    NSString *dataStringTemp27 = [Utils byteArrayToHexString:downTemp27];
-    NSString *dataStringTemp31 = [Utils byteArrayToHexString:downTemp31];
-    float downFloatX = [Utils hexString2float:dataStringTemp23];
-    float downFloatY = [Utils hexString2float:dataStringTemp19] * -1;
-    float downFloatZ = [Utils hexString2float:dataStringTemp27] * -1;
-    float downFloatW = [Utils hexString2float:dataStringTemp31];
-    
-    // NSLog(@"%@, 收到資料為上半身id %@\n", [GlobalConfig DebugTag], _upperId);
-    // NSLog(@"%@, 收到資料為下半身id %@\n", [GlobalConfig DebugTag], _downId);
-    // NSLog(@"%@, 收到上半身資料為 (%.3f, %.3f, %.3f, %.3f)\n", [GlobalConfig DebugTag], upperFloatX, upperFloatY, upperFloatZ, upperFloatW);
-    // NSLog(@"%@, 收到下半身資料為 (%.3f, %.3f, %.3f, %.3f)\n", [GlobalConfig DebugTag], downFloatX, downFloatY, downFloatZ, downFloatW);
-    
-    NSString *finalDataString = [NSString stringWithFormat:@"%@#%.3f#%.3f#%.3f#%.3f#%@#%.3f#%.3f#%.3f#%.3f", _upperId, upperFloatX, upperFloatY, upperFloatZ, upperFloatW, _downId, downFloatX, downFloatY, downFloatZ, downFloatW];
-    
-    UnitySendMessage("OC_Plugins", "receiveDataFromNative", [finalDataString UTF8String]);
+    if ([[[Utils byteArrayToHexString:aData] substringWithRange:NSMakeRange(0, 1)] isEqualToString:@"E"])
+    {
+        NSData *chunkUpperId = [aData subdataWithRange:NSMakeRange(0, 1)];
+        
+        NSMutableData *upperTemp1 = [[aData subdataWithRange:NSMakeRange(1, 4)] mutableCopy];
+        NSMutableData *upperTemp5 = [[aData subdataWithRange:NSMakeRange(5, 4)] mutableCopy];
+        NSMutableData *upperTemp9 = [[aData subdataWithRange:NSMakeRange(9, 4)] mutableCopy];
+        NSMutableData *upperTemp13 = [[aData subdataWithRange:NSMakeRange(13, 4)] mutableCopy];
+        uint32_t *bytes1 = (uint32_t *)upperTemp1.mutableBytes;
+        uint32_t *bytes5 = (uint32_t *)upperTemp5.mutableBytes;
+        uint32_t *bytes9 = (uint32_t *)upperTemp9.mutableBytes;
+        uint32_t *bytes13 = (uint32_t *)upperTemp13.mutableBytes;
+        *bytes1 = CFSwapInt32(*bytes1);
+        *bytes5 = CFSwapInt32(*bytes5);
+        *bytes9 = CFSwapInt32(*bytes9);
+        *bytes13 = CFSwapInt32(*bytes13);
+        
+        
+        NSData *chunkDownId = [aData subdataWithRange:NSMakeRange(18, 1)];
+        
+        NSMutableData *downTemp19 = [[aData subdataWithRange:NSMakeRange(19, 4)] mutableCopy];
+        NSMutableData *downTemp23 = [[aData subdataWithRange:NSMakeRange(23, 4)] mutableCopy];
+        NSMutableData *downTemp27 = [[aData subdataWithRange:NSMakeRange(27, 4)] mutableCopy];
+        NSMutableData *downTemp31 = [[aData subdataWithRange:NSMakeRange(31, 4)] mutableCopy];
+        uint32_t *bytes19 = (uint32_t *)downTemp19.mutableBytes;
+        uint32_t *bytes23 = (uint32_t *)downTemp23.mutableBytes;
+        uint32_t *bytes27 = (uint32_t *)downTemp27.mutableBytes;
+        uint32_t *bytes31 = (uint32_t *)downTemp31.mutableBytes;
+        *bytes19 = CFSwapInt32(*bytes19);
+        *bytes23 = CFSwapInt32(*bytes23);
+        *bytes27 = CFSwapInt32(*bytes27);
+        *bytes31 = CFSwapInt32(*bytes31);
+        
+        // NSString *dataString = [_unityBluetoothDataLib byteArrayToHexString:_data];
+        
+        _upperId = [Utils getBodyId:chunkUpperId];
+        NSString *dataStringTemp1 = [Utils byteArrayToHexString:upperTemp1];
+        NSString *dataStringTemp5 = [Utils byteArrayToHexString:upperTemp5];
+        NSString *dataStringTemp9 = [Utils byteArrayToHexString:upperTemp9];
+        NSString *dataStringTemp13 = [Utils byteArrayToHexString:upperTemp13];
+        float upperFloatX = [Utils hexString2float:dataStringTemp5];
+        float upperFloatY = [Utils hexString2float:dataStringTemp1] * -1;
+        float upperFloatZ = [Utils hexString2float:dataStringTemp9] * -1;
+        float upperFloatW = [Utils hexString2float:dataStringTemp13];
+        
+        _downId = [Utils getBodyId:chunkDownId];
+        NSString *dataStringTemp19 = [Utils byteArrayToHexString:downTemp19];
+        NSString *dataStringTemp23 = [Utils byteArrayToHexString:downTemp23];
+        NSString *dataStringTemp27 = [Utils byteArrayToHexString:downTemp27];
+        NSString *dataStringTemp31 = [Utils byteArrayToHexString:downTemp31];
+        float downFloatX = [Utils hexString2float:dataStringTemp23];
+        float downFloatY = [Utils hexString2float:dataStringTemp19] * -1;
+        float downFloatZ = [Utils hexString2float:dataStringTemp27] * -1;
+        float downFloatW = [Utils hexString2float:dataStringTemp31];
+        
+        // NSLog(@"%@, 收到資料為上半身id %@\n", [GlobalConfig DebugTag], _upperId);
+        // NSLog(@"%@, 收到資料為下半身id %@\n", [GlobalConfig DebugTag], _downId);
+        // NSLog(@"%@, 收到上半身資料為 (%.3f, %.3f, %.3f, %.3f)\n", [GlobalConfig DebugTag], upperFloatX, upperFloatY, upperFloatZ, upperFloatW);
+        // NSLog(@"%@, 收到下半身資料為 (%.3f, %.3f, %.3f, %.3f)\n", [GlobalConfig DebugTag], downFloatX, downFloatY, downFloatZ, downFloatW);
+        
+        NSString *finalDataString = [NSString stringWithFormat:@"%@#%.3f#%.3f#%.3f#%.3f#%@#%.3f#%.3f#%.3f#%.3f", _upperId, upperFloatX, upperFloatY, upperFloatZ, upperFloatW, _downId, downFloatX, downFloatY, downFloatZ, downFloatW];
+        
+        UnitySendMessage([[GlobalConfig UnityGameObject] UTF8String], "receiveDataFromNative", [finalDataString UTF8String]);
+    }
 }
 
 @end

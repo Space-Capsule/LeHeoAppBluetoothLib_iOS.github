@@ -9,9 +9,9 @@
 /* Begin PBXBuildFile section */
 		D692AA282B806266008C36C2 /* UnityBluetoothDataLib.h in Headers */ = {isa = PBXBuildFile; fileRef = D692AA272B806266008C36C2 /* UnityBluetoothDataLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D692AA2F2B8062C2008C36C2 /* UnityBluetoothDataLib.mm in Sources */ = {isa = PBXBuildFile; fileRef = D692AA2E2B8062C2008C36C2 /* UnityBluetoothDataLib.mm */; };
-		D69925FA2BA18BCA00872017 /* GlobalConfig.mm in Sources */ = {isa = PBXBuildFile; fileRef = D69925F92BA18BCA00872017 /* GlobalConfig.mm */; };
+		D69925FA2BA18BCA00872017 /* GlobalConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = D69925F92BA18BCA00872017 /* GlobalConfig.m */; };
 		D69925FB2BA18BCA00872017 /* GlobalConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = D69925F82BA18BCA00872017 /* GlobalConfig.h */; };
-		D69925FE2BA18CB000872017 /* Utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = D69925FD2BA18CB000872017 /* Utils.mm */; };
+		D69925FE2BA18CB000872017 /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = D69925FD2BA18CB000872017 /* Utils.m */; };
 		D69925FF2BA18CB000872017 /* Utils.h in Headers */ = {isa = PBXBuildFile; fileRef = D69925FC2BA18CB000872017 /* Utils.h */; };
 /* End PBXBuildFile section */
 
@@ -20,9 +20,9 @@
 		D692AA272B806266008C36C2 /* UnityBluetoothDataLib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UnityBluetoothDataLib.h; sourceTree = "<group>"; };
 		D692AA2E2B8062C2008C36C2 /* UnityBluetoothDataLib.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = UnityBluetoothDataLib.mm; sourceTree = "<group>"; };
 		D69925F82BA18BCA00872017 /* GlobalConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlobalConfig.h; sourceTree = "<group>"; };
-		D69925F92BA18BCA00872017 /* GlobalConfig.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = GlobalConfig.mm; sourceTree = "<group>"; };
+		D69925F92BA18BCA00872017 /* GlobalConfig.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GlobalConfig.m; sourceTree = "<group>"; };
 		D69925FC2BA18CB000872017 /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
-		D69925FD2BA18CB000872017 /* Utils.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Utils.mm; sourceTree = "<group>"; };
+		D69925FD2BA18CB000872017 /* Utils.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Utils.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,9 +58,9 @@
 				D692AA272B806266008C36C2 /* UnityBluetoothDataLib.h */,
 				D692AA2E2B8062C2008C36C2 /* UnityBluetoothDataLib.mm */,
 				D69925F82BA18BCA00872017 /* GlobalConfig.h */,
-				D69925F92BA18BCA00872017 /* GlobalConfig.mm */,
+				D69925F92BA18BCA00872017 /* GlobalConfig.m */,
 				D69925FC2BA18CB000872017 /* Utils.h */,
-				D69925FD2BA18CB000872017 /* Utils.mm */,
+				D69925FD2BA18CB000872017 /* Utils.m */,
 			);
 			path = UnityBluetoothDataLib;
 			sourceTree = "<group>";
@@ -146,8 +146,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D69925FE2BA18CB000872017 /* Utils.mm in Sources */,
-				D69925FA2BA18BCA00872017 /* GlobalConfig.mm in Sources */,
+				D69925FE2BA18CB000872017 /* Utils.m in Sources */,
+				D69925FA2BA18BCA00872017 /* GlobalConfig.m in Sources */,
 				D692AA2F2B8062C2008C36C2 /* UnityBluetoothDataLib.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
