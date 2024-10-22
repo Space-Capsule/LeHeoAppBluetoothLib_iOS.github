@@ -212,8 +212,6 @@ extern "C"
         if (peripheral != nil)
         {
             CBCharacteristic *chacter = nil;
-            // CBUUID *serviceUUID = [CBUUID UUIDWithString:@"FFE0"];
-            // CBUUID *characteristicUUID = [CBUUID UUIDWithString:@"FFE1"];
             CBUUID *serviceUUID = [CBUUID UUIDWithString:[GlobalConfig SubscribedService]];
             CBUUID *characteristicUUID = [CBUUID UUIDWithString:[GlobalConfig SubscribedCharacteristic]];
             
@@ -399,7 +397,6 @@ extern "C"
             if (_peripheralsDictionary != nil)
             {
                 NSString *deviceName = [peripheral name];
-                // if ([deviceName rangeOfString:@"HC-"].location != NSNotFound || [deviceName rangeOfString:@"SC-BLE5"].location != NSNotFound || [deviceName rangeOfString:@"SC-S0000"].location != NSNotFound || [deviceName rangeOfString:@"SC-LTC"].location != NSNotFound)
                 if ([deviceName rangeOfString:GlobalConfig.SC_BLE_NAME_HC].location != NSNotFound || [deviceName rangeOfString:GlobalConfig.SC_BLE_NAME].location != NSNotFound || [deviceName rangeOfString:GlobalConfig.SC_BLE_NAME2].location != NSNotFound || [deviceName rangeOfString:GlobalConfig.SC_BLE_NAME_LTC].location != NSNotFound)
                 {
                     NSString *deviceIdentifier = [[peripheral identifier] UUIDString];
@@ -528,7 +525,7 @@ extern "C"
         if (peripheralId != nil)
         {
             // NSLog(@"%@, characteristic uuid %@", [GlobalConfig DebugTag], [characteristic UUID]);
-            if (_unityBluetoothDataLib != nil && characteristic.value != nil && characteristic.value.length == 36)
+            if (_unityBluetoothDataLib != nil && characteristic.value != nil && (characteristic.value.length == GlobalConfig.DataSize36 || characteristic.value.length == GlobalConfig.DataSize20))
             {
                 // _unityBluetoothDataLib handleBluetoothData:];
                 // NSLog(@"EthanLinBluetoothDataLib, 收到資料長度為 %lu", (unsigned long)characteristic.value.length);
@@ -537,7 +534,7 @@ extern "C"
                 // NSLog(@"EthanLinBluetoothDataLib, 收到資料_upperId為 %@", _upperId);
                 _data = characteristic.value;
                 // [_unityBluetoothDataLib bleDataHandler:_data];
-                NSString *finalDataString = [Utils byteArrayToBase64:_data length:_data.length];
+                NSString *finalDataString = [Utils byteArrayToBase64:_data length:(int)_data.length];
                 UnitySendMessage([[GlobalConfig UnityGameObject] UTF8String], "receiveDataFromNative", [finalDataString UTF8String]);
             }
         }

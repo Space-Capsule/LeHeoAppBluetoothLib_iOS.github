@@ -61,4 +61,14 @@ static NSString *ScBleNameLTC = @"SC-LTC";
     return ScBleNameLTC;
 }
 
+
++ (unsigned long)DataSize20
+{
+    return 20;
+}
++ (unsigned long)DataSize36
+{
+    return 36;
+}
+
 @end

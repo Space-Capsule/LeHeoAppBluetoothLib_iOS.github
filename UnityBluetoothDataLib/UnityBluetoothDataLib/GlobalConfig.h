@@ -22,5 +22,8 @@
 + (NSString *)SC_BLE_NAME2;
 + (NSString *)SC_BLE_NAME_LTC;
 
++ (unsigned long)DataSize20;
++ (unsigned long)DataSize36;
+
 @end
 
